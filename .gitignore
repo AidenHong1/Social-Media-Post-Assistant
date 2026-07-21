@@ -1,0 +1,12 @@
+.venv/
+.env
+.vscode/
+CLAUDE.md
+__pycache__/
+*.pyc
+backend/app.db
+backend/.env
+node_modules/
+frontend/dist/
+frontend/.env
+.claude/
