@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     max_upload_mb: int = 10
     knowledge_storage_dir: str = "storage/knowledge_uploads"
 
+    # JWT配置
+    jwt_secret_key: str = "your-secret-key-change-this-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 30
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

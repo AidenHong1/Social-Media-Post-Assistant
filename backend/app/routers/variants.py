@@ -1,8 +1,11 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_active_user
 from app.db import get_db
-from app.models import Rating, Variant
+from app.models import Rating, User, Variant
 from app.schemas import RateVariantRequest, RatingOut
 
 router = APIRouter()
@@ -12,6 +15,7 @@ router = APIRouter()
 def rate_variant(
     variant_id: int,
     req: RateVariantRequest,
+    current_user: Annotated[User, Depends(get_current_active_user)],
     db: Session = Depends(get_db),
 ) -> RatingOut:
     variant = db.get(Variant, variant_id)

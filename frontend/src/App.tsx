@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
-import { generate, getHistory, getHistoryItem } from "./api";
+import { generate, getCurrentUser, getHistory, getHistoryItem, getToken, removeToken } from "./api";
 import GenerateForm from "./components/GenerateForm";
 import HistoryList from "./components/HistoryList";
 import KnowledgeManager from "./components/KnowledgeManager";
+import LoginForm from "./components/LoginForm";
 import ResultsView from "./components/ResultsView";
-import type { GenerateRequest, GenerateResponse, HistoryItem } from "./types";
+import type { GenerateRequest, GenerateResponse, HistoryItem, UserOut } from "./types";
 
 type Tab = "generate" | "knowledge";
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserOut | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("generate");
   const [currentResult, setCurrentResult] = useState<GenerateResponse | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -16,8 +20,40 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    refreshHistory();
+    checkAuth();
   }, []);
+
+  async function checkAuth() {
+    const token = getToken();
+    if (!token) {
+      setIsCheckingAuth(false);
+      return;
+    }
+
+    try {
+      const user = await getCurrentUser();
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      refreshHistory();
+    } catch {
+      removeToken();
+      setIsAuthenticated(false);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  }
+
+  function handleLoginSuccess() {
+    checkAuth();
+  }
+
+  function handleLogout() {
+    removeToken();
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setCurrentResult(null);
+    setHistory([]);
+  }
 
   async function refreshHistory() {
     try {
@@ -64,14 +100,40 @@ export default function App() {
     });
   }
 
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-600">加载中...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="flex min-h-screen flex-col">
         <header className="border-b border-slate-200 bg-white">
           <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-4 sm:px-6">
-            <div>
-              <h1 className="text-xl font-bold text-slate-800">AI 社交文案生成助手</h1>
-              <p className="text-sm text-slate-500">面向 LinkedIn / Facebook 的高质量推文生成</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-slate-800">AI 社交文案生成助手</h1>
+                <p className="text-sm text-slate-500">面向 LinkedIn / Facebook 的高质量推文生成</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-slate-600">
+                  欢迎，{currentUser?.full_name || currentUser?.username}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                >
+                  退出登录
+                </button>
+              </div>
             </div>
             <nav className="flex flex-wrap gap-2">
               <button

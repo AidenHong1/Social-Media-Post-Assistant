@@ -1,5 +1,22 @@
 export type PlatformName = "linkedin" | "facebook";
 
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface Token {
+  access_token: string;
+  token_type: string;
+}
+
+export interface UserOut {
+  id: number;
+  username: string;
+  full_name: string | null;
+  is_active: boolean;
+}
+
 export interface GenerateRequest {
   topic: string;
   key_points: string[];

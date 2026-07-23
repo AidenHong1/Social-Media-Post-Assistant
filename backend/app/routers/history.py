@@ -1,18 +1,23 @@
 import json
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_active_user
 from app.db import get_db
-from app.models import GenerationRequest
+from app.models import GenerationRequest, User
 from app.schemas import GenerateResponse, HistoryItem
 
 router = APIRouter()
 
 
 @router.get("/history", response_model=list[HistoryItem])
-def list_history(db: Session = Depends(get_db)) -> list[HistoryItem]:
+def list_history(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Session = Depends(get_db),
+) -> list[HistoryItem]:
     stmt = (
         select(GenerationRequest)
         .order_by(GenerationRequest.created_at.desc())
@@ -32,7 +37,11 @@ def list_history(db: Session = Depends(get_db)) -> list[HistoryItem]:
 
 
 @router.get("/history/{request_id}", response_model=GenerateResponse)
-def get_history_item(request_id: int, db: Session = Depends(get_db)) -> GenerateResponse:
+def get_history_item(
+    request_id: int,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Session = Depends(get_db),
+) -> GenerateResponse:
     db_request = db.get(GenerationRequest, request_id)
     if db_request is None:
         raise HTTPException(status_code=404, detail="Request not found")

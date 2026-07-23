@@ -1,7 +1,10 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_active_user
 from app.db import get_db
 from app.knowledge.parser import ParserError
 from app.knowledge.service import (
@@ -11,7 +14,7 @@ from app.knowledge.service import (
     replace_document,
     upload_document,
 )
-from app.models import KnowledgeDocument
+from app.models import KnowledgeDocument, User
 from app.schemas import DocumentOut
 
 router = APIRouter()
@@ -26,7 +29,9 @@ def _get_document_or_404(db: Session, document_id: int) -> KnowledgeDocument:
 
 @router.post("/documents/upload", response_model=DocumentOut, status_code=201)
 async def upload(
-    file: UploadFile = File(...), db: Session = Depends(get_db)
+    file: UploadFile = File(...),
+    current_user: Annotated[User, Depends(get_current_active_user)] = None,
+    db: Session = Depends(get_db),
 ) -> DocumentOut:
     try:
         document = await upload_document(db, file)
@@ -36,19 +41,29 @@ async def upload(
 
 
 @router.get("/documents", response_model=list[DocumentOut])
-def list_documents(db: Session = Depends(get_db)) -> list[DocumentOut]:
+def list_documents(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Session = Depends(get_db),
+) -> list[DocumentOut]:
     stmt = select(KnowledgeDocument).order_by(KnowledgeDocument.uploaded_at.desc())
     return list(db.execute(stmt).scalars().all())
 
 
 @router.get("/documents/{document_id}", response_model=DocumentOut)
-def get_document(document_id: int, db: Session = Depends(get_db)) -> DocumentOut:
+def get_document(
+    document_id: int,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Session = Depends(get_db),
+) -> DocumentOut:
     return _get_document_or_404(db, document_id)
 
 
 @router.put("/documents/{document_id}", response_model=DocumentOut)
 async def replace(
-    document_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)
+    document_id: int,
+    file: UploadFile = File(...),
+    current_user: Annotated[User, Depends(get_current_active_user)] = None,
+    db: Session = Depends(get_db),
 ) -> DocumentOut:
     document = _get_document_or_404(db, document_id)
     try:
@@ -62,6 +77,10 @@ async def replace(
 
 
 @router.delete("/documents/{document_id}", status_code=204)
-def delete(document_id: int, db: Session = Depends(get_db)) -> None:
+def delete(
+    document_id: int,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Session = Depends(get_db),
+) -> None:
     document = _get_document_or_404(db, document_id)
     delete_document(db, document)
