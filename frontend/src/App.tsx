@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { generate, getCurrentUser, getHistory, getHistoryItem, getToken, removeToken } from "./api";
+import { generate, generateStream, getCurrentUser, getHistory, getHistoryItem, getToken, removeToken } from "./api";
 import GenerateForm from "./components/GenerateForm";
 import HistoryList from "./components/HistoryList";
 import KnowledgeManager from "./components/KnowledgeManager";
 import LoginForm from "./components/LoginForm";
 import ResultsView from "./components/ResultsView";
-import type { GenerateRequest, GenerateResponse, HistoryItem, UserOut } from "./types";
+import type { GenerateRequest, GenerateResponse, HistoryItem, UserOut, VariantOut } from "./types";
 
 type Tab = "generate" | "knowledge";
 
@@ -67,10 +67,52 @@ export default function App() {
   async function handleGenerate(req: GenerateRequest) {
     setIsLoading(true);
     setError(null);
+    setCurrentResult(null); // 清空之前的结果
+
     try {
-      const result = await generate(req);
-      setCurrentResult(result);
-      await refreshHistory();
+      // 使用流式API
+      const partialVariants: VariantOut[] = [];
+      let requestId: number | null = null;
+      let topic = "";
+      let brandTone = "";
+      let createdAt = "";
+
+      await generateStream(
+        req,
+        // onVariant: 每收到一个变体就更新UI
+        (variant) => {
+          partialVariants.push(variant);
+          // 实时更新显示
+          if (requestId !== null) {
+            setCurrentResult({
+              request_id: requestId,
+              topic,
+              brand_tone: brandTone,
+              created_at: createdAt,
+              variants: [...partialVariants],
+            });
+          }
+        },
+        // onComplete: 所有变体完成
+        (data) => {
+          requestId = data.request_id;
+          topic = data.topic;
+          brandTone = data.brand_tone;
+          createdAt = data.created_at;
+          setCurrentResult({
+            request_id: data.request_id,
+            topic: data.topic,
+            brand_tone: data.brand_tone,
+            created_at: data.created_at,
+            variants: partialVariants,
+          });
+          refreshHistory();
+        },
+        // onError: 错误处理
+        (errorMsg) => {
+          setError(errorMsg);
+        }
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "生成失败，请稍后重试");
     } finally {

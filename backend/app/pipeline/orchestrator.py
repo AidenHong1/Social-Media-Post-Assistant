@@ -1,3 +1,6 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Callable, Generator
 from pydantic import BaseModel
 
 from app.llm.client import LLMClient
@@ -51,7 +54,40 @@ def run_platform_variants(
     n_variants: int = 2,
     kb_context: str = "",
 ) -> list[PipelineResult]:
-    return [
-        run_single_variant(llm, topic, key_points, brand_tone, constraints, kb_context)
-        for _ in range(n_variants)
-    ]
+    """并发生成多个变体以提升性能"""
+    with ThreadPoolExecutor(max_workers=n_variants) as executor:
+        futures = [
+            executor.submit(
+                run_single_variant, llm, topic, key_points, brand_tone, constraints, kb_context
+            )
+            for _ in range(n_variants)
+        ]
+        return [future.result() for future in futures]
+
+
+def run_platform_variants_stream(
+    llm: LLMClient,
+    topic: str,
+    key_points: list[str],
+    brand_tone: str,
+    constraints: PlatformConstraints,
+    n_variants: int = 2,
+    kb_context: str = "",
+    on_variant_complete: Callable[[int, PipelineResult], None] | None = None,
+) -> Generator[tuple[int, PipelineResult], None, None]:
+    """流式生成变体，每完成一个立即yield"""
+    with ThreadPoolExecutor(max_workers=n_variants) as executor:
+        futures = {
+            executor.submit(
+                run_single_variant, llm, topic, key_points, brand_tone, constraints, kb_context
+            ): idx
+            for idx in range(n_variants)
+        }
+
+        # 按完成顺序yield结果
+        for future in as_completed(futures):
+            idx = futures[future]
+            result = future.result()
+            if on_variant_complete:
+                on_variant_complete(idx, result)
+            yield idx, result
