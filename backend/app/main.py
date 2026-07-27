@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import sys
+import pysqlite3
+sys.modules["sqlite3"] = pysqlite3
 from sqlalchemy import text
 
 from app.config import settings
