@@ -54,11 +54,18 @@ def get_embedding_model():
         local_path = get_local_model_path()
 
         if local_path:
-            print(f"✓ 从本地加载模型: {local_path}")
-            _model = SentenceTransformer(local_path)
+            try:
+                print(f"✓ 从本地加载模型: {local_path}")
+                _model = SentenceTransformer(local_path)
+            except Exception as e:
+                # 本地模型文件损坏或不完整(如 safetensors 只拉到了 LFS 指针),
+                # 回退到 HuggingFace 直接下载,避免每次启动都因同一个坏文件报错
+                print(f"✗ 本地模型加载失败: {e}")
+                print(f"  回退到 HuggingFace 下载: {EMBEDDING_MODEL_NAME}")
+                _model = SentenceTransformer(EMBEDDING_MODEL_NAME)
         else:
             print(f"✓ 本地模型不存在,从 HuggingFace 下载: {EMBEDDING_MODEL_NAME}")
-            print(f"  提示: 可将模型下载到 models/{EMBEDDING_MODEL_NAME} 目录以加速启动")
+            print(f"  提示: 可运行 python download_model.py 下载到本地以加速启动")
             _model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
     return _model
