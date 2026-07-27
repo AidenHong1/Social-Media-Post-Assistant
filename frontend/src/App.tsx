@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { generate, generateStream, getCurrentUser, getHistory, getHistoryItem, getToken, removeToken } from "./api";
+import { generateStream, getCurrentUser, getHistory, getHistoryItem, getToken, removeToken } from "./api";
 import GenerateForm from "./components/GenerateForm";
 import HistoryList from "./components/HistoryList";
 import KnowledgeManager from "./components/KnowledgeManager";

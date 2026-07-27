@@ -21,14 +21,30 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
-    with engine.begin() as conn:
-        conn.execute(
-            text(
-                "CREATE VIRTUAL TABLE IF NOT EXISTS vec_chunks USING vec0("
-                "chunk_id INTEGER PRIMARY KEY, embedding FLOAT[384])"
+
+    # 尝试创建向量表，如果扩展未加载则跳过
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "CREATE VIRTUAL TABLE IF NOT EXISTS vec_chunks USING vec0("
+                    "chunk_id INTEGER PRIMARY KEY, embedding FLOAT[384])"
+                )
             )
+    except Exception as e:
+        import warnings
+        warnings.warn(
+            f"Failed to create vector table: {e}. "
+            "Vector search features will be disabled. "
+            "The app will continue to work without knowledge base retrieval."
         )
-    get_embedding_model()
+
+    # 加载嵌入模型
+    try:
+        get_embedding_model()
+    except Exception as e:
+        import warnings
+        warnings.warn(f"Failed to load embedding model: {e}")
 
 
 @app.get("/api/health")
