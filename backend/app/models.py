@@ -66,6 +66,21 @@ class Rating(Base):
     variant: Mapped["Variant"] = relationship(back_populates="rating")
 
 
+class Template(Base):
+    __tablename__ = "templates"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str | None]
+    category: Mapped[str] = mapped_column(String(50))
+    platform: Mapped[str] = mapped_column(String(20))  # linkedin | facebook | both
+    topic: Mapped[str | None]
+    key_points: Mapped[str]  # JSON-encoded list[str]
+    brand_tone: Mapped[str] = mapped_column(default="")
+    is_builtin: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+
+
 class KnowledgeDocument(Base):
     __tablename__ = "knowledge_documents"
 

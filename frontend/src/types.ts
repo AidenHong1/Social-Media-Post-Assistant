@@ -74,3 +74,54 @@ export interface DocumentOut {
   uploaded_at: string;
   updated_at: string;
 }
+
+export interface Template {
+  id: number;
+  name: string;
+  description: string | null;
+  category: string;
+  platform: string;
+  topic: string | null;
+  key_points: string[];
+  brand_tone: string;
+  is_builtin: boolean;
+  created_at: string;
+}
+
+export interface TemplateCreate {
+  name: string;
+  description?: string;
+  category: string;
+  platform: string;
+  topic?: string;
+  key_points: string[];
+  brand_tone: string;
+}
+
+export interface TextSegment {
+  type: "text";
+  content: string;
+}
+
+export interface ImageSegment {
+  type: "image";
+  url: string;
+  caption: string;
+  insertedBy: "manual" | "ai";
+}
+
+export type ContentSegment = TextSegment | ImageSegment;
+
+export interface ImageGenerateResponse {
+  image_url: string;
+  prompt_used: string;
+  filename: string;
+}
+
+export interface AutoImageResponse {
+  image_url: string;
+  insertion_position: string;
+  prompt_used: string;
+  caption: string;
+  filename: string;
+}

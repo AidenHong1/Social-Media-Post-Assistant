@@ -8,7 +8,7 @@ from sqlalchemy import text
 from app.config import settings
 from app.db import Base, engine
 from app.knowledge.embedding import get_embedding_model
-from app.routers import auth, generate, history, knowledge, variants
+from app.routers import auth, generate, history, images, knowledge, templates, variants
 
 app = FastAPI(title="AI Social Post Generator")
 
@@ -60,3 +60,5 @@ app.include_router(generate.router, prefix="/api")
 app.include_router(history.router, prefix="/api")
 app.include_router(variants.router, prefix="/api")
 app.include_router(knowledge.router, prefix="/api")
+app.include_router(templates.router, prefix="/api")
+app.include_router(images.router, prefix="/api")

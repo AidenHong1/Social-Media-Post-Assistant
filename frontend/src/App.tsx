@@ -157,34 +157,39 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="flex min-h-screen flex-col">
-        <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-4 sm:px-6">
+        <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 shadow-lg">
+          <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-4 py-4 sm:px-6">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xl font-bold text-slate-800">AI 社交文案生成助手</h1>
-                <p className="text-sm text-slate-500">面向 LinkedIn / Facebook 的高质量推文生成</p>
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/20 text-lg">
+                  ✦
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold leading-tight text-white">AI 社交文案生成助手</h1>
+                  <p className="text-xs text-slate-400">LinkedIn · Facebook 高质量推文生成</p>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-slate-600">
-                  欢迎，{currentUser?.full_name || currentUser?.username}
+              <div className="flex items-center gap-3">
+                <span className="hidden text-sm text-slate-300 sm:block">
+                  {currentUser?.full_name || currentUser?.username}
                 </span>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 hover:border-slate-500 hover:bg-slate-700/50 hover:text-white transition-colors"
                 >
-                  退出登录
+                  退出
                 </button>
               </div>
             </div>
-            <nav className="flex flex-wrap gap-2">
+            <nav className="flex gap-1">
               <button
                 type="button"
                 onClick={() => setActiveTab("generate")}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
                   activeTab === "generate"
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-600 hover:bg-slate-100"
+                    ? "bg-blue-500 text-white shadow-sm"
+                    : "text-slate-400 hover:bg-slate-700/50 hover:text-white"
                 }`}
               >
                 生成文案
@@ -192,13 +197,13 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveTab("knowledge")}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
                   activeTab === "knowledge"
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-600 hover:bg-slate-100"
+                    ? "bg-blue-500 text-white shadow-sm"
+                    : "text-slate-400 hover:bg-slate-700/50 hover:text-white"
                 }`}
               >
-                企业知识库管理
+                企业知识库
               </button>
             </nav>
           </div>

@@ -1,11 +1,15 @@
 import type {
+  AutoImageResponse,
   DocumentOut,
   GenerateRequest,
   GenerateResponse,
   HistoryItem,
+  ImageGenerateResponse,
   LoginRequest,
   RateVariantRequest,
   RatingOut,
+  Template,
+  TemplateCreate,
   Token,
   UserOut,
   VariantOut,
@@ -230,4 +234,54 @@ export async function deleteDocument(documentId: number): Promise<void> {
     }
     throw new Error(detail);
   }
+}
+
+// ─── Templates ────────────────────────────────────────────────────────────────
+
+export async function getTemplates(): Promise<Template[]> {
+  const res = await fetch(`${BASE_URL}/templates`, {
+    headers: getHeaders(),
+  });
+  return handleResponse<Template[]>(res);
+}
+
+export async function createTemplate(req: TemplateCreate): Promise<Template> {
+  const res = await fetch(`${BASE_URL}/templates`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(req),
+  });
+  return handleResponse<Template>(res);
+}
+
+export async function deleteTemplate(templateId: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/templates/${templateId}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
+  if (res.status === 204) return;
+  await handleResponse<void>(res);
+}
+
+// ─── Images ───────────────────────────────────────────────────────────────────
+
+export async function generateImage(
+  prompt: string,
+  size = "1024x1024",
+): Promise<ImageGenerateResponse> {
+  const res = await fetch(`${BASE_URL}/images/generate`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ prompt, size }),
+  });
+  return handleResponse<ImageGenerateResponse>(res);
+}
+
+export async function autoImageForVariant(variantId: number): Promise<AutoImageResponse> {
+  const res = await fetch(`${BASE_URL}/images/auto-for-variant`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ variant_id: variantId }),
+  });
+  return handleResponse<AutoImageResponse>(res);
 }

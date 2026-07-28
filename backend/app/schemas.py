@@ -55,6 +55,54 @@ class RateVariantRequest(BaseModel):
     is_favorite: bool = False
 
 
+class TemplateCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    description: str | None = None
+    category: str = Field(min_length=1, max_length=50)
+    platform: str = "both"
+    topic: str | None = None
+    key_points: list[str] = []
+    brand_tone: str = ""
+
+
+class TemplateOut(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    category: str
+    platform: str
+    topic: str | None
+    key_points: list[str]
+    brand_tone: str
+    is_builtin: bool
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ImageGenerateRequest(BaseModel):
+    prompt: str = Field(min_length=1, max_length=1000)
+    size: str = "1024x1024"
+
+
+class ImageGenerateResponse(BaseModel):
+    image_url: str
+    prompt_used: str
+    filename: str
+
+
+class AutoImageRequest(BaseModel):
+    variant_id: int
+
+
+class AutoImageResponse(BaseModel):
+    image_url: str
+    insertion_position: str  # beginning | after_hook | before_cta | end
+    prompt_used: str
+    caption: str
+    filename: str
+
+
 DocumentStatus = Literal["processing", "ready", "failed"]
 
 
