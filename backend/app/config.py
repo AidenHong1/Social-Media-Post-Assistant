@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     image_model: str = "dall-e-3"
     image_storage_dir: str = "storage/images"
     image_generation_enabled: bool = False
+    image_rate_limit_interval: float = 1.0  # 请求间隔（秒）
+    image_max_retries: int = 3  # 遇到429时的最大重试次数
 
     # JWT配置 - 必须通过环境变量设置
     jwt_secret_key: str  # 无默认值，强制从环境变量读取
