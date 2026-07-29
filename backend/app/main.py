@@ -25,6 +25,29 @@ app.add_middleware(
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
 
+    # 执行数据库迁移
+    from pathlib import Path
+    migration_file = Path(__file__).parent.parent / "migrations" / "001_add_variant_images.sql"
+    if migration_file.exists():
+        try:
+            with engine.begin() as conn:
+                # 检查 variant_images 表是否已存在
+                result = conn.execute(
+                    text("SELECT name FROM sqlite_master WHERE type='table' AND name='variant_images'")
+                )
+                if not result.fetchone():
+                    # 执行迁移
+                    migration_sql = migration_file.read_text(encoding='utf-8')
+                    for statement in migration_sql.split(';'):
+                        statement = statement.strip()
+                        if statement:
+                            conn.execute(text(statement))
+                    import warnings
+                    warnings.warn("Successfully migrated: added variant_images table")
+        except Exception as e:
+            import warnings
+            warnings.warn(f"Migration warning: {e}")
+
     # 尝试创建向量表，如果扩展未加载则跳过
     try:
         with engine.begin() as conn:

@@ -1,21 +1,27 @@
 import type {
   AutoImageResponse,
+  AutoMultiImageResponse,
   DocumentOut,
+  GenerateContextualImageRequest,
+  GenerateContextualImageResponse,
   GenerateRequest,
   GenerateResponse,
   HistoryItem,
   ImageGenerateResponse,
+  ImageUploadResponse,
   LoginRequest,
   RateVariantRequest,
   RatingOut,
+  SaveVariantContentRequest,
   Template,
   TemplateCreate,
   Token,
   UserOut,
+  VariantContentResponse,
   VariantOut,
 } from "./types";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 // Token管理
 const TOKEN_KEY = "auth_token";
@@ -267,7 +273,7 @@ export async function deleteTemplate(templateId: number): Promise<void> {
 
 export async function generateImage(
   prompt: string,
-  size = "1024x1024",
+  size = "1792x1024",
 ): Promise<ImageGenerateResponse> {
   const res = await fetch(`${BASE_URL}/images/generate`, {
     method: "POST",
@@ -284,4 +290,65 @@ export async function autoImageForVariant(variantId: number): Promise<AutoImageR
     body: JSON.stringify({ variant_id: variantId }),
   });
   return handleResponse<AutoImageResponse>(res);
+}
+
+export async function autoMultiImageForVariant(
+  variantId: number,
+  maxImages = 3,
+): Promise<AutoMultiImageResponse> {
+  const res = await fetch(`${BASE_URL}/images/auto-multi-for-variant`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ variant_id: variantId, max_images: maxImages }),
+  });
+  return handleResponse<AutoMultiImageResponse>(res);
+}
+
+export async function generateContextualImage(
+  req: GenerateContextualImageRequest,
+): Promise<GenerateContextualImageResponse> {
+  const res = await fetch(`${BASE_URL}/images/generate-contextual`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(req),
+  });
+  return handleResponse<GenerateContextualImageResponse>(res);
+}
+
+export async function uploadImage(file: File): Promise<ImageUploadResponse> {
+  const token = getToken();
+  const headers: HeadersInit = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${BASE_URL}/images/upload`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+  return handleResponse<ImageUploadResponse>(res);
+}
+
+// ─── Variant content (图文排版持久化) ────────────────────────────────────────────
+
+export async function getVariantContent(variantId: number): Promise<VariantContentResponse> {
+  const res = await fetch(`${BASE_URL}/variants/${variantId}/content`, {
+    headers: getHeaders(),
+  });
+  return handleResponse<VariantContentResponse>(res);
+}
+
+export async function saveVariantContent(
+  variantId: number,
+  req: SaveVariantContentRequest,
+): Promise<VariantContentResponse> {
+  const res = await fetch(`${BASE_URL}/variants/${variantId}/content`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(req),
+  });
+  return handleResponse<VariantContentResponse>(res);
 }

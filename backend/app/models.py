@@ -111,3 +111,31 @@ class KnowledgeChunk(Base):
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
     document: Mapped["KnowledgeDocument"] = relationship(back_populates="chunks")
+
+
+class VariantImage(Base):
+    __tablename__ = "variant_images"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    variant_id: Mapped[int] = mapped_column(ForeignKey("variants.id", ondelete="CASCADE"))
+    segment_index: Mapped[int]  # 在 segments 数组中的位置
+    image_url: Mapped[str] = mapped_column(String(500))  # /api/images/files/{filename} 或外链
+    filename: Mapped[str | None] = mapped_column(String(255))  # 本地文件名
+    caption: Mapped[str | None]
+    inserted_by: Mapped[str] = mapped_column(String(10))  # 'manual' | 'ai'
+    prompt_used: Mapped[str | None]  # AI生成时使用的 prompt
+    context_before: Mapped[str | None]  # 插入点前的上下文
+    context_after: Mapped[str | None]  # 插入点后的上下文
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    variant: Mapped["Variant"] = relationship(back_populates="images")
+
+
+# 更新 Variant 模型，添加 images 关系
+Variant.images = relationship(
+    "VariantImage",
+    back_populates="variant",
+    cascade="all, delete-orphan",
+    order_by="VariantImage.segment_index"
+)

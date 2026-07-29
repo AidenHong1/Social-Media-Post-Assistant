@@ -1,5 +1,5 @@
 import type { GenerateResponse, VariantOut } from "../types";
-import VariantCard from "./VariantCard";
+import VariantCarousel from "./VariantCarousel";
 
 interface Props {
   result: GenerateResponse | null;
@@ -65,11 +65,7 @@ export default function ResultsView({ result, isLoading, error, onRated }: Props
           <h3 className="text-sm font-semibold text-slate-600">
             {PLATFORM_LABELS[platform] ?? platform}
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-            {variants.map((v) => (
-              <VariantCard key={v.id} variant={v} onRated={onRated} />
-            ))}
-          </div>
+          <VariantCarousel variants={variants} onRated={onRated} />
         </div>
       ))}
     </div>

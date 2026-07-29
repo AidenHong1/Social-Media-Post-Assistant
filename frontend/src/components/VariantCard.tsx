@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { rateVariant } from "../api";
-import type { VariantOut } from "../types";
+import { useEffect, useState } from "react";
+import { getVariantContent, rateVariant } from "../api";
+import type { ContentSegment, VariantOut } from "../types";
 import { ContentEditor } from "./ContentEditor";
+import PlatformPostCard from "./PlatformPostCard";
 import RatingControl from "./RatingControl";
 
 interface Props {
@@ -12,10 +13,52 @@ interface Props {
 export default function VariantCard({ variant, onRated }: Props) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showEditor, setShowEditor] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [segments, setSegments] = useState<ContentSegment[]>([]);
+  const [isLoadingSegments, setIsLoadingSegments] = useState(true);
+
+  // 始终加载 segments（包含图片），无论是否在编辑模式
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingSegments(true);
+    getVariantContent(variant.id)
+      .then((res) => {
+        if (!cancelled && res.segments.length > 0) {
+          setSegments(res.segments);
+        } else if (!cancelled) {
+          // 后端返回空，按段落拆分 final_text 作为初始 segments
+          const paragraphs = variant.final_text.split(/\n\n+/).filter(p => p.trim() !== "");
+          setSegments(
+            paragraphs.length > 0
+              ? paragraphs.map(p => ({ type: "text", content: p }))
+              : [{ type: "text", content: variant.final_text }]
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          const paragraphs = variant.final_text.split(/\n\n+/).filter(p => p.trim() !== "");
+          setSegments(
+            paragraphs.length > 0
+              ? paragraphs.map(p => ({ type: "text", content: p }))
+              : [{ type: "text", content: variant.final_text }]
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingSegments(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [variant.id, variant.final_text]);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(variant.final_text);
+    const textOnly = segments
+      .filter(s => s.type === "text")
+      .map(s => s.content)
+      .join("\n\n");
+    await navigator.clipboard.writeText(textOnly);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
@@ -31,8 +74,8 @@ export default function VariantCard({ variant, onRated }: Props) {
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
+    <div className={editMode ? "space-y-3 rounded-xl border-2 border-blue-400 bg-blue-50/30 p-4" : "space-y-3"}>
+      <div className="flex items-center justify-between px-1">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
           变体 {variant.variant_index + 1}
         </span>
@@ -44,30 +87,31 @@ export default function VariantCard({ variant, onRated }: Props) {
           )}
           <button
             type="button"
-            onClick={() => setShowEditor((v) => !v)}
-            className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
-              showEditor
-                ? "bg-blue-100 text-blue-700"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            onClick={() => setEditMode((v) => !v)}
+            className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+              editMode
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
-            {showEditor ? "图文编辑中" : "图文排版"}
+            {editMode ? "关闭图文排版" : "开启图文排版"}
           </button>
         </div>
       </div>
 
-      {showEditor ? (
+      {isLoadingSegments ? (
+        <p className="text-sm text-gray-500">加载内容中...</p>
+      ) : editMode ? (
         <ContentEditor
           variantId={variant.id}
-          finalText={variant.final_text}
+          initialSegments={segments}
+          onSegmentsUpdate={setSegments}
         />
       ) : (
-        <pre className="whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-3 font-sans text-sm text-slate-800">
-          {variant.final_text}
-        </pre>
+        <PlatformPostCard platform={variant.platform} segments={segments} />
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-1">
         <button
           type="button"
           onClick={handleCopy}
@@ -82,7 +126,7 @@ export default function VariantCard({ variant, onRated }: Props) {
         />
       </div>
 
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="px-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }

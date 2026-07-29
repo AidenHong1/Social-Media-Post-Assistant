@@ -82,7 +82,7 @@ class TemplateOut(BaseModel):
 
 class ImageGenerateRequest(BaseModel):
     prompt: str = Field(min_length=1, max_length=1000)
-    size: str = "1024x1024"
+    size: str = "1792x1024"
 
 
 class ImageGenerateResponse(BaseModel):
@@ -103,7 +103,88 @@ class AutoImageResponse(BaseModel):
     filename: str
 
 
+class ImageSuggestion(BaseModel):
+    """单个图片建议（位置 + prompt + caption）"""
+    insertion_index: int  # 插入到 segments[insertion_index] 之前
+    image_prompt: str
+    caption: str
+
+
+class GeneratedPositionedImage(BaseModel):
+    """已生成的图片，携带其插入位置索引"""
+    image_url: str
+    insertion_index: int
+    prompt_used: str
+    caption: str
+    filename: str
+
+
+class AutoMultiImageRequest(BaseModel):
+    variant_id: int
+    max_images: int = Field(default=3, ge=1, le=5)  # 最多生成几张图
+
+
+class AutoMultiImageResponse(BaseModel):
+    """多图智能配置结果"""
+    images: list[GeneratedPositionedImage]  # 实际生成的图片列表，按 insertion_index 排序
+
+
 DocumentStatus = Literal["processing", "ready", "failed"]
+
+
+# ─── Content Segments (图文混排) ──────────────────────────────────────────────
+
+class TextSegment(BaseModel):
+    type: Literal["text"]
+    content: str
+
+
+class ImageSegment(BaseModel):
+    type: Literal["image"]
+    url: str
+    filename: str | None = None
+    caption: str | None = None
+    insertedBy: Literal["manual", "ai"]
+    promptUsed: str | None = None
+    contextBefore: str | None = None
+    contextAfter: str | None = None
+
+
+ContentSegment = TextSegment | ImageSegment
+
+
+class SaveVariantContentRequest(BaseModel):
+    segments: list[ContentSegment]
+
+
+class VariantContentResponse(BaseModel):
+    variant_id: int
+    segments: list[ContentSegment]
+    updated_at: datetime
+
+
+class GenerateContextualImageRequest(BaseModel):
+    variant_id: int
+    context_before: str = ""
+    context_after: str = ""
+    user_prompt: str = ""
+    size: str = "1792x1024"
+
+
+class GenerateContextualImageResponse(BaseModel):
+    image_url: str
+    filename: str
+    prompt_used: str
+    caption: str
+
+
+class ImageUploadResponse(BaseModel):
+    """本地文件上传响应"""
+    image_url: str
+    filename: str
+
+
+# ─── Knowledge Documents ──────────────────────────────────────────────────────
 
 
 class DocumentOut(BaseModel):

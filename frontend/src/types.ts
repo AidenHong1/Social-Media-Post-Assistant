@@ -32,7 +32,7 @@ export interface RatingOut {
 
 export interface VariantOut {
   id: number;
-  platform: string;
+  platform: PlatformName;
   variant_index: number;
   final_text: string;
   draft_text: string;
@@ -106,8 +106,12 @@ export interface TextSegment {
 export interface ImageSegment {
   type: "image";
   url: string;
-  caption: string;
+  filename?: string | null;
+  caption: string | null;
   insertedBy: "manual" | "ai";
+  promptUsed?: string | null;
+  contextBefore?: string | null;
+  contextAfter?: string | null;
 }
 
 export type ContentSegment = TextSegment | ImageSegment;
@@ -123,5 +127,52 @@ export interface AutoImageResponse {
   insertion_position: string;
   prompt_used: string;
   caption: string;
+  filename: string;
+}
+
+export interface GeneratedPositionedImage {
+  image_url: string;
+  insertion_index: number;
+  prompt_used: string;
+  caption: string;
+  filename: string;
+}
+
+export interface AutoMultiImageRequest {
+  variant_id: number;
+  max_images?: number;
+}
+
+export interface AutoMultiImageResponse {
+  images: GeneratedPositionedImage[];
+}
+
+export interface SaveVariantContentRequest {
+  segments: ContentSegment[];
+}
+
+export interface VariantContentResponse {
+  variant_id: number;
+  segments: ContentSegment[];
+  updated_at: string;
+}
+
+export interface GenerateContextualImageRequest {
+  variant_id: number;
+  context_before?: string;
+  context_after?: string;
+  user_prompt?: string;
+  size?: string;
+}
+
+export interface GenerateContextualImageResponse {
+  image_url: string;
+  filename: string;
+  prompt_used: string;
+  caption: string;
+}
+
+export interface ImageUploadResponse {
+  image_url: string;
   filename: string;
 }
