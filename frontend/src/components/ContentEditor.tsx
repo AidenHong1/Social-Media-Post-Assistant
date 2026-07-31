@@ -134,41 +134,49 @@ export function ContentEditor({ variantId, initialSegments, onSegmentsUpdate }: 
   const insertContext = getContextAround(insertAtIndex);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium text-gray-700">内容预览</h4>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+        <h4 className="text-sm font-semibold text-slate-800">图文内容编辑</h4>
         <div className="flex items-center gap-2">
           <button
             onClick={handleAutoImage}
             disabled={isGenerating}
-            className="px-3 py-1.5 text-sm bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-all hover:from-blue-600 hover:to-purple-600 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isGenerating ? "正在生成配图..." : "AI自动配图"}
+            <span className="text-sm">{isGenerating ? "⏳" : "✨"}</span>
+            <span>{isGenerating ? "生成中..." : "AI自动配图"}</span>
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium shadow-sm transition-all ${
+              saved
+                ? "bg-emerald-500 text-white"
+                : "bg-emerald-600 text-white hover:bg-emerald-700"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {isSaving ? "保存中..." : saved ? "已保存" : "保存排版"}
+            <span className="text-sm">{saved ? "✓" : "💾"}</span>
+            <span>{isSaving ? "保存中..." : saved ? "已保存" : "保存排版"}</span>
           </button>
         </div>
       </div>
 
       {generatingError && (
-        <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">
-          {generatingError}
+        <div className="flex items-start gap-2 text-xs text-red-600 bg-red-50 px-3 py-2.5 rounded-lg border border-red-200">
+          <span className="text-sm">⚠</span>
+          <span>{generatingError}</span>
         </div>
       )}
       {saveError && (
-        <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">
-          {saveError}
+        <div className="flex items-start gap-2 text-xs text-red-600 bg-red-50 px-3 py-2.5 rounded-lg border border-red-200">
+          <span className="text-sm">⚠</span>
+          <span>{saveError}</span>
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {segments.map((segment, index) => (
-          <div key={index}>
+          <div key={index} className="space-y-2">
             <InsertDivider onInsert={() => openInsertPanel(index)} />
 
             {segment.type === "text" ? (
@@ -176,31 +184,33 @@ export function ContentEditor({ variantId, initialSegments, onSegmentsUpdate }: 
                 value={segment.content}
                 onChange={(e) => handleTextEdit(index, e.target.value)}
                 rows={Math.max(3, segment.content.split("\n").length)}
-                className="w-full whitespace-pre-wrap break-words text-sm text-gray-800 bg-gray-50 p-3 rounded-lg border border-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                className="w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800 bg-gray-50 p-4 rounded-lg border border-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all"
               />
             ) : (
-              <div className="relative bg-white border border-gray-200 rounded-lg p-3 space-y-2">
+              <div className="relative bg-white border border-gray-200 rounded-lg p-4 space-y-3 shadow-sm">
                 <img
                   src={segment.url}
                   alt={segment.caption ?? ""}
-                  className="w-full rounded-md"
+                  className="w-full rounded-lg shadow-sm"
                 />
                 {segment.caption && (
-                  <p className="text-xs text-gray-600">{segment.caption}</p>
+                  <p className="text-xs leading-relaxed text-gray-600 italic">{segment.caption}</p>
                 )}
-                <div className="flex items-center justify-between text-xs">
-                  <span className={`px-2 py-0.5 rounded ${
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium ${
                     segment.insertedBy === "ai"
                       ? "bg-purple-100 text-purple-700"
                       : "bg-gray-100 text-gray-700"
                   }`}>
-                    {segment.insertedBy === "ai" ? "AI生成" : "手动插入"}
+                    <span className="text-sm">{segment.insertedBy === "ai" ? "✨" : "📎"}</span>
+                    <span>{segment.insertedBy === "ai" ? "AI生成" : "手动插入"}</span>
                   </span>
                   <button
                     onClick={() => handleDeleteImage(index)}
-                    className="text-red-600 hover:text-red-800"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
                   >
-                    删除
+                    <span className="text-sm">✕</span>
+                    <span>删除</span>
                   </button>
                 </div>
               </div>
@@ -225,11 +235,12 @@ export function ContentEditor({ variantId, initialSegments, onSegmentsUpdate }: 
 
 function InsertDivider({ onInsert }: { onInsert: () => void }) {
   return (
-    <div className="group relative h-2 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-      <div className="absolute inset-x-0 h-px bg-gray-300"></div>
+    <div className="group relative h-3 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
+      <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-300 to-transparent"></div>
       <button
         onClick={onInsert}
-        className="relative bg-white border border-gray-300 rounded-full w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400"
+        className="relative bg-white border-2 border-blue-400 rounded-full w-7 h-7 flex items-center justify-center text-blue-600 text-sm font-semibold hover:bg-blue-50 hover:border-blue-500 hover:shadow-md transition-all"
+        title="在此位置插入图片"
       >
         +
       </button>

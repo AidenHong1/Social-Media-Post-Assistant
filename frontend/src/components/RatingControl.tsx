@@ -11,8 +11,8 @@ export default function RatingControl({ score, isFavorite, onRate }: Props) {
   const displayScore = hoverScore ?? score;
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex">
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
@@ -20,7 +20,7 @@ export default function RatingControl({ score, isFavorite, onRate }: Props) {
             onMouseEnter={() => setHoverScore(n)}
             onMouseLeave={() => setHoverScore(null)}
             onClick={() => onRate(n, isFavorite)}
-            className={`text-lg ${n <= displayScore ? "text-yellow-400" : "text-slate-300"}`}
+            className={`text-lg transition-all hover:scale-110 ${n <= displayScore ? "text-yellow-400" : "text-slate-300 hover:text-yellow-200"}`}
             aria-label={`评${n}分`}
           >
             ★
@@ -30,9 +30,9 @@ export default function RatingControl({ score, isFavorite, onRate }: Props) {
       <button
         type="button"
         onClick={() => onRate(score || 0, !isFavorite)}
-        className={`text-lg ${isFavorite ? "text-pink-500" : "text-slate-300"}`}
-        aria-label="收藏"
-        title="收藏"
+        className={`text-xl transition-all hover:scale-110 ${isFavorite ? "text-pink-500" : "text-slate-300 hover:text-pink-300"}`}
+        aria-label={isFavorite ? "取消收藏" : "收藏"}
+        title={isFavorite ? "取消收藏" : "收藏"}
       >
         {isFavorite ? "♥" : "♡"}
       </button>
